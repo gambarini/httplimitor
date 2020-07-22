@@ -1,17 +1,14 @@
 package internal
 
 import (
-	"log"
 	"time"
-)
-
-type (
-	Ip string
 )
 
 var (
 	requestStore = map[Ip][]int64{}
 )
+
+
 
 func StoreRequest(ip Ip, done chan int) {
 
@@ -30,15 +27,11 @@ func StoreRequest(ip Ip, done chan int) {
 	done <- 0
 }
 
-func IsRequestLimit(ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp int64){
+func IsRequestLimit(ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp int64) {
 
 	tLimit := time.Now().Add(time.Minute * time.Duration(-minutes)).UTC().UnixNano()
 
 	ts, ok := requestStore[ip]
-
-	log.Printf("Req: %d", len(ts))
-	log.Printf("ts: %v", ts)
-	log.Printf("ts len: %d", len(ts))
 
 	if !ok {
 		return false, tLimit
@@ -46,11 +39,7 @@ func IsRequestLimit(ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp 
 
 	c := 0
 
-	log.Printf("c: %d", c)
-
-	for i := len(ts); i > 0; i = i-1 {
-
-		log.Printf("ts %d - tLimit: %d", ts[i-1], tLimit)
+	for i := len(ts); i > 0; i = i - 1 {
 
 		if ts[i-1] < tLimit {
 			break
@@ -59,10 +48,6 @@ func IsRequestLimit(ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp 
 		c++
 	}
 
-	log.Printf("c: %d", c)
-
 	return c >= limit, ts[len(ts)-1]
 
 }
-
-
