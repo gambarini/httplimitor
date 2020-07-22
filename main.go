@@ -1,16 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"httplimitor/internal"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
 
 	http.HandleFunc("/", LimitInterceptor(func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte("OK"))
-	}, 10, 1))
+	}, 3, 1))
 
 	log.Print("Listening on :8000")
 	err := http.ListenAndServe(":8000", nil)
@@ -27,12 +29,19 @@ func LimitInterceptor(next http.HandlerFunc, reqLimit, minutesLimit int) http.Ha
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		if internal.IsRequestLimit(internal.Ip(r.URL.Host), reqLimit, minutesLimit) {
+		isLimit, lastReqTime := internal.IsRequestLimit(internal.Ip(r.URL.Host), reqLimit, minutesLimit)
+
+		if  isLimit {
 
 			log.Print("Request limit reached.")
 
 			w.WriteHeader(429)
-			_, _ = w.Write([]byte("Rate limit exceeded."))
+
+			tLeft := time.Unix(0, lastReqTime).Add(time.Minute * time.Duration(minutesLimit)).Sub(time.Now().UTC())
+
+			_, _ = w.Write([]byte(fmt.Sprintf("Rate limit exceeded. Try again in %v.", tLeft)))
+
+
 			return
 		}
 

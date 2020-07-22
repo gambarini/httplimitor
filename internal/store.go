@@ -30,7 +30,7 @@ func StoreRequest(ip Ip, done chan int) {
 	done <- 0
 }
 
-func IsRequestLimit(ip Ip, limit int, minutes int) bool {
+func IsRequestLimit(ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp int64){
 
 	tLimit := time.Now().Add(time.Minute * time.Duration(-minutes)).UTC().UnixNano()
 
@@ -41,7 +41,7 @@ func IsRequestLimit(ip Ip, limit int, minutes int) bool {
 	log.Printf("ts len: %d", len(ts))
 
 	if !ok {
-		return false
+		return false, tLimit
 	}
 
 	c := 0
@@ -61,7 +61,7 @@ func IsRequestLimit(ip Ip, limit int, minutes int) bool {
 
 	log.Printf("c: %d", c)
 
-	return c >= limit
+	return c >= limit, ts[len(ts)-1]
 
 }
 
