@@ -33,7 +33,7 @@ func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFun
 
 		done := make(chan int)
 
-		go StoreRequest(store, Ip(clientIP), done)
+		go SaveRequest(store, Ip(clientIP), done)
 
 		next.ServeHTTP(w, r)
 
@@ -47,7 +47,7 @@ func GetIP(r *http.Request) Ip {
 	return Ip(strings.Split(r.RemoteAddr, ":")[0])
 }
 
-func StoreRequest(store HTTPLimitorStore, ip Ip, done chan int) {
+func SaveRequest(store HTTPLimitorStore, ip Ip, done chan int) {
 
 	now := time.Now().UTC().UnixNano()
 
