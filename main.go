@@ -5,6 +5,7 @@ import (
 	"httplimitor/internal"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -29,11 +30,17 @@ func LimitInterceptor(next http.HandlerFunc, reqLimit, minutesLimit int) http.Ha
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		isLimit, lastReqTime := internal.IsRequestLimit(internal.Ip(r.URL.Host), reqLimit, minutesLimit)
+		if r.RemoteAddr == "" {
+			next.ServeHTTP(w, r)
+		}
+
+		clientIP := strings.Split(r.RemoteAddr, ":")[0]
+
+		isLimit, lastReqTime := internal.IsRequestLimit(internal.Ip(clientIP), reqLimit, minutesLimit)
 
 		if  isLimit {
 
-			log.Print("Request limit reached.")
+			log.Printf("Request limit reached for %s.", clientIP)
 
 			w.WriteHeader(429)
 
@@ -45,11 +52,11 @@ func LimitInterceptor(next http.HandlerFunc, reqLimit, minutesLimit int) http.Ha
 			return
 		}
 
-		log.Print("Storing request")
+		log.Printf("Storing request for %s", clientIP)
 
 		done := make(chan int)
 
-		go  internal.StoreRequest(internal.Ip(r.URL.Host), done)
+		go  internal.StoreRequest(internal.Ip(clientIP), done)
 
 		next.ServeHTTP(w, r)
 
@@ -57,3 +64,5 @@ func LimitInterceptor(next http.HandlerFunc, reqLimit, minutesLimit int) http.Ha
 
 	}
 }
+
+
