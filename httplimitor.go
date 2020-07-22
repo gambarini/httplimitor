@@ -1,26 +1,21 @@
 package httplimitor
 
 import (
-	"httplimitor/internal"
+	http2 "httplimitor/http"
 	"net/http"
 )
 
-func LimitInterceptor(next http.HandlerFunc) http.HandlerFunc {
+func LimitInterceptor(next http.HandlerFunc, lStore http2.LimitorStore) http.HandlerFunc {
 
-	return internal.Limit(next, 100, 60, internal.GetIP, internal.NewMemoryStore())
+	return http2.Limit(next, 100, 60, http2.GetIP, lStore)
 }
 
-func LimitInterceptorWithCustomLimit(next http.HandlerFunc, reqLimit, minutesLimit int) http.HandlerFunc {
+func LimitInterceptorWithCustomLimit(next http.HandlerFunc, lStore http2.LimitorStore, reqLimit, minutesLimit int) http.HandlerFunc {
 
-	return internal.Limit(next, reqLimit, minutesLimit, internal.GetIP, internal.NewMemoryStore())
+	return http2.Limit(next, reqLimit, minutesLimit, http2.GetIP, lStore)
 }
 
-func LimitInterceptorWithCustomIp(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc internal.GetIpFunc) http.HandlerFunc {
+func LimitInterceptorWithCustomIp(next http.HandlerFunc, lStore http2.LimitorStore, reqLimit, minutesLimit int, getIpFunc http2.GetIpFunc) http.HandlerFunc {
 
-	return internal.Limit(next, reqLimit, minutesLimit, getIpFunc, internal.NewMemoryStore())
-}
-
-func LimitInterceptorWithCustomStore(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc internal.GetIpFunc, store internal.HTTPLimitorStore) http.HandlerFunc {
-
-	return internal.Limit(next, reqLimit, minutesLimit, getIpFunc, store)
+	return http2.Limit(next, reqLimit, minutesLimit, getIpFunc, lStore)
 }

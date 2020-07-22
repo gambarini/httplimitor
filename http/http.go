@@ -1,4 +1,4 @@
-package internal
+package http
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type (
 	GetIpFunc func(r *http.Request) Ip
 )
 
-func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFunc, store HTTPLimitorStore) http.HandlerFunc {
+func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFunc, store LimitorStore) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -47,7 +47,7 @@ func GetIP(r *http.Request) Ip {
 	return Ip(strings.Split(r.RemoteAddr, ":")[0])
 }
 
-func SaveRequest(store HTTPLimitorStore, ip Ip, done chan int) {
+func SaveRequest(store LimitorStore, ip Ip, done chan int) {
 
 	now := time.Now().UTC().UnixNano()
 
@@ -62,7 +62,7 @@ func SaveRequest(store HTTPLimitorStore, ip Ip, done chan int) {
 	done <- 0
 }
 
-func IsRequestLimit(store HTTPLimitorStore, ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp int64) {
+func IsRequestLimit(store LimitorStore, ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp int64) {
 
 	tLimit := time.Now().Add(time.Minute * time.Duration(-minutes)).UTC().UnixNano()
 
