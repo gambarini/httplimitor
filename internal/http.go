@@ -12,13 +12,13 @@ type (
 	GetIpFunc func(r *http.Request) Ip
 )
 
-func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFunc) http.HandlerFunc {
+func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFunc, store HTTPLimitorStore) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		clientIP := getIpFunc(r)
 
-		isLimit, lastReqTime := IsRequestLimit(Ip(clientIP), reqLimit, minutesLimit)
+		isLimit, lastReqTime := IsRequestLimit(store, Ip(clientIP), reqLimit, minutesLimit)
 
 		if isLimit {
 
@@ -33,7 +33,7 @@ func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFun
 
 		done := make(chan int)
 
-		go StoreRequest(Ip(clientIP), done)
+		go StoreRequest(store, Ip(clientIP), done)
 
 		next.ServeHTTP(w, r)
 
@@ -45,4 +45,44 @@ func Limit(next http.HandlerFunc, reqLimit, minutesLimit int, getIpFunc GetIpFun
 func GetIP(r *http.Request) Ip {
 
 	return Ip(strings.Split(r.RemoteAddr, ":")[0])
+}
+
+func StoreRequest(store HTTPLimitorStore, ip Ip, done chan int) {
+
+	now := time.Now().UTC().UnixNano()
+
+	ts, ok := store.GetValue(ip)
+
+	if !ok {
+		store.SetValue(ip, []int64{now})
+	} else {
+		store.SetValue(ip, append(ts, now))
+	}
+
+	done <- 0
+}
+
+func IsRequestLimit(store HTTPLimitorStore, ip Ip, limit int, minutes int) (isLimit bool, lastTimestamp int64) {
+
+	tLimit := time.Now().Add(time.Minute * time.Duration(-minutes)).UTC().UnixNano()
+
+	ts, ok := store.GetValue(ip)
+
+	if !ok {
+		return false, tLimit
+	}
+
+	c := 0
+
+	for i := len(ts); i > 0; i = i - 1 {
+
+		if ts[i-1] < tLimit {
+			break
+		}
+
+		c++
+	}
+
+	return c >= limit, ts[len(ts)-1]
+
 }

@@ -1,4 +1,4 @@
-# Http Limitor
+# HTTP Limitor
 
 HTTP requests rate limiter for Golang.
 
