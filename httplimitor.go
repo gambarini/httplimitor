@@ -1,7 +1,7 @@
 package httplimitor
 
 import (
-	http2 "httplimitor/http"
+	http2 "httplimitor/limit"
 	"net/http"
 )
 

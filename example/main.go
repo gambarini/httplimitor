@@ -2,14 +2,14 @@ package main
 
 import (
 	"httplimitor"
-	http2 "httplimitor/http"
+	"httplimitor/limit"
 	"log"
 	"net/http"
 )
 
 func main() {
 
-	lStore := http2.NewMemoryStore()
+	lStore := limit.NewMemoryStore()
 
 	http.HandleFunc("/", httplimitor.LimitInterceptorWithCustomLimit(func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte("OK"))
