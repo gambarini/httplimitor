@@ -1,21 +1,21 @@
 package httplimitor
 
 import (
-	http2 "httplimitor/limit"
+	limit "httplimitor/limit"
 	"net/http"
 )
 
-func LimitInterceptor(next http.HandlerFunc, lStore http2.LimitorStore) http.HandlerFunc {
+func LimitInterceptor(next http.HandlerFunc, lStore limit.LimitorStore) http.HandlerFunc {
 
-	return http2.Limit(next, 100, 60, http2.GetIP, lStore)
+	return limit.Limit(next, 100, 60, limit.GetIP, lStore)
 }
 
-func LimitInterceptorWithCustomLimit(next http.HandlerFunc, lStore http2.LimitorStore, reqLimit, minutesLimit int) http.HandlerFunc {
+func LimitInterceptorWithCustomLimit(next http.HandlerFunc, lStore limit.LimitorStore, reqLimit, minutesLimit int) http.HandlerFunc {
 
-	return http2.Limit(next, reqLimit, minutesLimit, http2.GetIP, lStore)
+	return limit.Limit(next, reqLimit, minutesLimit, limit.GetIP, lStore)
 }
 
-func LimitInterceptorWithCustomIp(next http.HandlerFunc, lStore http2.LimitorStore, reqLimit, minutesLimit int, getIpFunc http2.GetIpFunc) http.HandlerFunc {
+func LimitInterceptorWithCustomIp(next http.HandlerFunc, lStore limit.LimitorStore, reqLimit, minutesLimit int, getIpFunc limit.GetIpFunc) http.HandlerFunc {
 
-	return http2.Limit(next, reqLimit, minutesLimit, getIpFunc, lStore)
+	return limit.Limit(next, reqLimit, minutesLimit, getIpFunc, lStore)
 }
