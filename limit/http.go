@@ -65,23 +65,12 @@ func IsRequestLimit(store LimitorStore, ip Ip, limit int, minutes int) (isLimit 
 
 	tLimit := timeNow().Add(time.Minute * time.Duration(-minutes)).UTC().UnixNano()
 
-	ts, ok := store.GetValue(ip)
+	result := store.GetValue(ip ,tLimit)
 
-	if !ok {
+	if len(result) == 0 {
 		return false, tLimit
 	}
 
-	c := 0
-
-	for i := len(ts); i > 0; i = i - 1 {
-
-		if ts[i-1] < tLimit {
-			break
-		}
-
-		c++
-	}
-
-	return c >= limit, ts[len(ts)-1]
+	return len(result) >= limit, result[len(result)-1]
 
 }
