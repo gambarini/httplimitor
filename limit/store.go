@@ -5,30 +5,39 @@ import "sync"
 type (
 	LimitorStore interface {
 		GetValue(ip Ip) ([]int64, bool)
-		SetValue(ip Ip, v []int64)
+		SetValue(ip Ip, updateFunc UpdateFunc)
+
 	}
 
+	UpdateFunc func(v []int64, ok bool) []int64
+
 	MemoryStore struct {
-		mapStore sync.Map
+		sMap map[Ip][]int64
+		sync.RWMutex
 	}
 )
 
 func NewMemoryStore() (store LimitorStore) {
 
-	return &MemoryStore{}
+	return &MemoryStore{
+		sMap: map[Ip][]int64{},
+	}
 }
 
 func (store *MemoryStore) GetValue(ip Ip) ([]int64, bool) {
 
-	v, ok := store.mapStore.Load(ip)
+	store.RLock()
+	v, ok := store.sMap[ip]
+	store.RUnlock()
 
-	if ok {
-		return v.([]int64), ok
-	} else {
-		return []int64{}, ok
-	}
+	return v, ok
 }
 
-func (store *MemoryStore) SetValue(ip Ip, v []int64) {
-	store.mapStore.Store(ip, v)
+func (store *MemoryStore) SetValue(ip Ip, updateFunc UpdateFunc) {
+
+	store.Lock()
+	v, ok := store.sMap[ip]
+	store.sMap[ip] = updateFunc(v, ok)
+	store.Unlock()
+
 }

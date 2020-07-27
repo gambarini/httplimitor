@@ -55,15 +55,17 @@ func GetIP(r *http.Request) Ip {
 
 func SaveRequest(store LimitorStore, ip Ip, done chan int) {
 
-	now := timeNow().UnixNano()
+	store.SetValue(ip, func(v []int64, ok bool) []int64 {
+		now := timeNow().UnixNano()
 
-	ts, ok := store.GetValue(ip)
+		if !ok {
+			v = []int64{now}
+		} else {
+			v = append(v, now)
+		}
 
-	if !ok {
-		store.SetValue(ip, []int64{now})
-	} else {
-		store.SetValue(ip, append(ts, now))
-	}
+		return v
+	})
 
 	done <- 0
 
